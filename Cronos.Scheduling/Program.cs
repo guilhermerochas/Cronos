@@ -3,9 +3,16 @@ using Cronos.Scheduling.Services;
 using Hangfire;
 using Hangfire.SQLite;
 
+using Microsoft.Data.Sqlite;
+
 const string connectionStringKey = "DefaultConnection";
 
 var builder = WebApplication.CreateBuilder(args);
+
+using (SqliteConnection connection = new SqliteConnection(builder.Configuration.GetConnectionString(connectionStringKey)))
+{
+    await connection.OpenAsync();
+}
 
 builder.Services.AddHangfire(configuration => configuration
     .SetDataCompatibilityLevel(CompatibilityLevel.Version_170)

@@ -5,7 +5,7 @@ namespace Cronos.Scheduling;
 public class CommandRunner
 {
     [DisplayName("{0}")]
-    public void RunCommand(string name, string commandParser, string arguments)
+    public void RunCommand(string _, string commandParser, string arguments)
     {
         var processInfo = new ProcessStartInfo
         {

@@ -4,7 +4,7 @@
 		{
 			"Name": "Create new file",
 			"Expression": "* * * * *",
-			"Command": "/c powershell -Command \"New-Item C:\\Users\\ThinkPad\\Desktop\\file.txt\""
+			"Command": ""
 		}
 	]
 }

@@ -17,6 +17,8 @@ public class FileWatcherService : BackgroundService
         _logger = logger;
     }
 
+    private IStorageConnection JobStorageConnections => JobStorage.Current.GetConnection();
+
     protected override async Task ExecuteAsync(CancellationToken stoppingToken) => await DoWork(stoppingToken);
 
 
@@ -42,6 +44,14 @@ public class FileWatcherService : BackgroundService
 
         _logger.LogInformation("Starting background process...");
 
+        using var jobStorage = JobStorageConnections;
+
+        if (jobStorage.GetRecurringJobs().Count == 0)
+        {
+            _logger.LogInformation("No recurring jobs were found, processing file for the first time!");
+            RunBackgroundJobs();
+        }
+
         while (!cancellationToken.IsCancellationRequested)
         {
             await Task.Delay(int.MaxValue, cancellationToken);
@@ -57,13 +67,18 @@ public class FileWatcherService : BackgroundService
 
         _logger.LogInformation("File was update, jobs are being recreated!");
 
-        using var jobStorageConnection = JobStorage.Current.GetConnection();
+        using var jobStorage = JobStorageConnections;
 
-        foreach (var recurringJob in jobStorageConnection.GetRecurringJobs())
+        foreach (var recurringJob in jobStorage.GetRecurringJobs())
         {
             RecurringJob.RemoveIfExists(recurringJob.Id);
         }
 
+        RunBackgroundJobs();
+    }
+
+    private void RunBackgroundJobs()
+    {
         using StreamReader streamReader = new(Path.Combine(_environment.ContentRootPath, "file.json"));
 
         var jobsModel = JsonSerializer.Deserialize<JobsModel>(streamReader.BaseStream);
